@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">Login</string>
+    <string name="login">Login</string>
+    <string name="password">Password</string>
+    <string name="agreement_full_text">I agree with terms of use and privacy policy</string>
+    <string name="invalid_email_message">Incorrect email</string>
+    <string name="valid_email_message">Correct email</string>
+    <string name="terms_of_use">terms of use</string>
+    <string name="privacy_policy">privacy policy</string>
+    <string name="service_is_unavailable">Service is unavailable</string>
+    <string name="attention">Attention</string>
+    <string name="invalid_password">Password must be at least eight characters long and include
+        letters, numbers and special characters</string>
+</resources>
