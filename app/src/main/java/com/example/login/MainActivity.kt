@@ -30,6 +30,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        Log.d(TAG, "onCreate ${savedInstanceState == null}")
 
         val agreementTextView: TextView = findViewById(R.id.agreementTextView)
         val fulltext = getString(R.string.agreement_full_text)
@@ -76,7 +77,7 @@ class MainActivity : AppCompatActivity() {
 
         val loginInputLayout = findViewById<TextInputLayout>(R.id.loginInputLayout)
         loginInputEditText = loginInputLayout.editText as TextInputEditText
-        loginInputEditText.addTextChangedListener(textWatcher)
+//        loginInputEditText.addTextChangedListener(textWatcher)
 
         val loginButton = findViewById<View>(R.id.loginButton)
         val checkBox = findViewById<CheckBox>(R.id.checkBox)
@@ -86,6 +87,7 @@ class MainActivity : AppCompatActivity() {
         }
         val passInputLayout = findViewById<TextInputLayout>(R.id.passInputLayout)
         passInputEditText = passInputLayout.editText as TextInputEditText
+
 
         val contentLayout = findViewById<LinearLayout>(R.id.contentLayout)
         val progressBar = findViewById<View>(R.id.progressBar)
@@ -120,30 +122,42 @@ class MainActivity : AppCompatActivity() {
                 loginInputLayout.error = getString(R.string.invalid_email_message)
             }
         }
-        loginInputEditText.listenChanges { loginInputLayout.isErrorEnabled = false }
+        passInputEditText.listenChanges {
+            passInputLayout.isErrorEnabled = false
+        }
+        loginInputEditText.listenChanges {
+            Log.d(TAG, "changed login $it")
+            loginInputLayout.isErrorEnabled = false
+
+        }
     }
 
     private lateinit var loginInputEditText: TextInputEditText
     private lateinit var passInputEditText: TextInputEditText
 
-    private val textWatcher = object : SimpleTextWatcher() {
-        override fun afterTextChanged(s: Editable?) {
-            Log.d(TAG, "afterTextChanged$s")
-            val input = s.toString()
-            if (input.endsWith("@g")) {
-                Log.d(TAG, "programmatically set text")
-                setText("${input}mail.com")
-            }
-        }
-    }
-
-    private fun setText(text: String) {
-        loginInputEditText.removeTextChangedListener(textWatcher)
-        loginInputEditText.setTextCorrectly(text)
-        loginInputEditText.addTextChangedListener(textWatcher)
-    }
+//    private val textWatcher = object : SimpleTextWatcher() {
+//        override fun afterTextChanged(s: Editable?) {
+//            Log.d(TAG, "afterTextChanged$s")
+//            val input = s.toString()
+//            if (input.endsWith("@g")) {
+//                Log.d(TAG, "programmatically set text")
+//                setText("${input}mail.com")
+//            }
+//        }
+//    }
+//
+//    private fun setText(text: String) {
+//        loginInputEditText.removeTextChangedListener(textWatcher)
+//        loginInputEditText.setTextCorrectly(text)
+//        loginInputEditText.addTextChangedListener(textWatcher)
+//    }
 
 }
+
+//fun TextInputEditText.setTextCorrectly(text: CharSequence) {
+//    setText(text)
+//    setSelection(text.length)
+//}
 
 fun AppCompatActivity.hideKeyboard(view: View) {
     val imm = this.getSystemService(AppCompatActivity.INPUT_METHOD_SERVICE) as InputMethodManager
@@ -156,9 +170,5 @@ fun TextInputEditText.listenChanges(block: (text: String) -> Unit) {
             block.invoke(s.toString())
         }
     })
-}
 
-fun TextInputEditText.setTextCorrectly(text: CharSequence) {
-    setText(text)
-    setSelection(text.length)
 }
