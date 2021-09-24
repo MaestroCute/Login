@@ -26,7 +26,32 @@ import com.google.android.material.textfield.TextInputLayout
 
 private const val TAG = "TextWatcherTag"
 
+
 class MainActivity : AppCompatActivity() {
+
+    private lateinit var loginInputLayout: TextInputLayout
+    private lateinit var loginInputEditText: TextInputEditText
+    private lateinit var passInputLayout:TextInputLayout
+    private lateinit var passInputEditText: TextInputEditText
+
+    private val textWatcher = object: SimpleTextWatcher() {
+        override fun afterTextChanged(s: Editable?) {
+            Log.d(TAG, "change ${s.toString()}")
+            loginInputLayout.isErrorEnabled = false
+            passInputLayout.isErrorEnabled = false
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        loginInputEditText.addTextChangedListener(textWatcher)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        loginInputEditText.removeTextChangedListener(textWatcher)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -75,9 +100,8 @@ class MainActivity : AppCompatActivity() {
             highlightColor = Color.TRANSPARENT
         }
 
-        val loginInputLayout = findViewById<TextInputLayout>(R.id.loginInputLayout)
+        loginInputLayout = findViewById(R.id.loginInputLayout)
         loginInputEditText = loginInputLayout.editText as TextInputEditText
-//        loginInputEditText.addTextChangedListener(textWatcher)
 
         val loginButton = findViewById<View>(R.id.loginButton)
         val checkBox = findViewById<CheckBox>(R.id.checkBox)
@@ -85,7 +109,7 @@ class MainActivity : AppCompatActivity() {
         checkBox.setOnCheckedChangeListener { _, isChecked ->
             loginButton.isEnabled = isChecked
         }
-        val passInputLayout = findViewById<TextInputLayout>(R.id.passInputLayout)
+        passInputLayout = findViewById(R.id.passInputLayout)
         passInputEditText = passInputLayout.editText as TextInputEditText
 
 
@@ -122,53 +146,11 @@ class MainActivity : AppCompatActivity() {
                 loginInputLayout.error = getString(R.string.invalid_email_message)
             }
         }
-        passInputEditText.listenChanges {
-            passInputLayout.isErrorEnabled = false
-        }
-        loginInputEditText.listenChanges {
-            Log.d(TAG, "changed login $it")
-            loginInputLayout.isErrorEnabled = false
-
-        }
     }
-
-    private lateinit var loginInputEditText: TextInputEditText
-    private lateinit var passInputEditText: TextInputEditText
-
-//    private val textWatcher = object : SimpleTextWatcher() {
-//        override fun afterTextChanged(s: Editable?) {
-//            Log.d(TAG, "afterTextChanged$s")
-//            val input = s.toString()
-//            if (input.endsWith("@g")) {
-//                Log.d(TAG, "programmatically set text")
-//                setText("${input}mail.com")
-//            }
-//        }
-//    }
-//
-//    private fun setText(text: String) {
-//        loginInputEditText.removeTextChangedListener(textWatcher)
-//        loginInputEditText.setTextCorrectly(text)
-//        loginInputEditText.addTextChangedListener(textWatcher)
-//    }
-
 }
-
-//fun TextInputEditText.setTextCorrectly(text: CharSequence) {
-//    setText(text)
-//    setSelection(text.length)
-//}
 
 fun AppCompatActivity.hideKeyboard(view: View) {
     val imm = this.getSystemService(AppCompatActivity.INPUT_METHOD_SERVICE) as InputMethodManager
     imm.hideSoftInputFromWindow(view.windowToken, 0)
 }
 
-fun TextInputEditText.listenChanges(block: (text: String) -> Unit) {
-    addTextChangedListener(object : SimpleTextWatcher() {
-        override fun afterTextChanged(s: Editable?) {
-            block.invoke(s.toString())
-        }
-    })
-
-}
