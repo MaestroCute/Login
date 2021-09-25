@@ -1,5 +1,6 @@
 package com.example.login
 
+import android.app.Dialog
 import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -15,11 +16,11 @@ import android.util.Log
 import android.util.Patterns.EMAIL_ADDRESS
 import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.CheckBox
 import android.widget.LinearLayout
 import android.widget.TextView
-import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
@@ -29,12 +30,21 @@ private const val TAG = "TextWatcherTag"
 
 class MainActivity : AppCompatActivity() {
 
+    private companion object {
+        const val INITIAL = 0
+        const val PROGRESS = 1
+        const val SUCCESS = 2
+        const val FAILED = 3
+    }
+
+    private var state = INITIAL
+
     private lateinit var loginInputLayout: TextInputLayout
     private lateinit var loginInputEditText: TextInputEditText
-    private lateinit var passInputLayout:TextInputLayout
+    private lateinit var passInputLayout: TextInputLayout
     private lateinit var passInputEditText: TextInputEditText
 
-    private val textWatcher = object: SimpleTextWatcher() {
+    private val textWatcher = object : SimpleTextWatcher() {
         override fun afterTextChanged(s: Editable?) {
             Log.d(TAG, "change ${s.toString()}")
             loginInputLayout.isErrorEnabled = false
@@ -42,20 +52,36 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putInt("screenState", state)
+    }
+
     override fun onResume() {
         super.onResume()
+        Log.d(TAG, "onResume")
         loginInputEditText.addTextChangedListener(textWatcher)
     }
 
     override fun onPause() {
         super.onPause()
+        Log.d(TAG, "onPause")
         loginInputEditText.removeTextChangedListener(textWatcher)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        Log.d(TAG, "onDestroy")
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         Log.d(TAG, "onCreate ${savedInstanceState == null}")
+        savedInstanceState?.let {
+            state = it.getInt("screenState")
+        }
+        Log.d(TAG, "state is $state")
 
         val agreementTextView: TextView = findViewById(R.id.agreementTextView)
         val fulltext = getString(R.string.agreement_full_text)
@@ -122,21 +148,13 @@ class MainActivity : AppCompatActivity() {
                     loginButton.isEnabled = false
                     contentLayout.visibility = View.GONE
                     progressBar.visibility = View.VISIBLE
+                    state = PROGRESS
                     Handler(Looper.myLooper()!!).postDelayed({
+                        state = FAILED
                         progressBar.visibility = View.GONE
                         contentLayout.visibility = View.VISIBLE
-                        val dialog = BottomSheetDialog(this)
-                        val view =
-                            LayoutInflater.from(this).inflate(R.layout.dialog, contentLayout, false)
-                        dialog.setCancelable(false)
-                        view.findViewById<View>(R.id.closeButton).setOnClickListener {
-                            dialog.dismiss()
-                        }
-                        dialog.setContentView(view)
-                        dialog.show()
-
+                        showDialog(contentLayout)
                     }, 3000)
-                    Snackbar.make(loginButton, "Go to postLogin", Snackbar.LENGTH_LONG).show()
                 } else {
                     passInputLayout.isErrorEnabled = true
                     passInputLayout.error = getString(R.string.invalid_password)
@@ -146,6 +164,26 @@ class MainActivity : AppCompatActivity() {
                 loginInputLayout.error = getString(R.string.invalid_email_message)
             }
         }
+        when (state) {
+            FAILED -> showDialog(contentLayout)
+            SUCCESS -> {
+                Snackbar.make(contentLayout, "Success", Snackbar.LENGTH_LONG).show()
+                state = INITIAL
+            }
+        }
+    }
+
+    private fun showDialog(viewGroup: ViewGroup) {
+        val dialog = Dialog(this)
+        val view =
+            LayoutInflater.from(this).inflate(R.layout.dialog, viewGroup, false)
+        dialog.setCancelable(false)
+        view.findViewById<View>(R.id.closeButton).setOnClickListener {
+            state = INITIAL
+            dialog.dismiss()
+        }
+        dialog.setContentView(view)
+        dialog.show()
     }
 }
 
